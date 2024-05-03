@@ -12,21 +12,30 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+dotenv_path = os.path.join(BASE_DIR, 'wms_project/.env')
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
+
+ENVIRONMENT = os.getenv('ESPORTS_MG_ENVIRONMENT', 'local')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-pctt&-(mti^o^6tpaz_t162rwv#=-$pvwkg6ge92%7t+c7%n@@'
+SECRET_KEY = os.getenv(
+    'WMS_SECRET_KEY',
+    'django-insecure-pctt&-(mti^o^6tpaz_t162rwv#=-$pvwkg6ge92%7t+c7%n@@'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if ENVIRONMENT in ['test', 'local'] else False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
