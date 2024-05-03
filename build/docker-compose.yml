@@ -1,0 +1,48 @@
+version: "3"
+networks:
+  default:
+    external: true
+    name: wms_shared
+services:
+  postgres_db:
+    image: postgres:16.2
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_USER: postgres
+      POSTGRES_DB: wms
+      POSTGRES_REP_USER: postgres_rep
+      POSTGRES_REP_PASSWORD: 123456
+    ports:
+      - "5437:5432"
+    volumes:
+      - ./pgdata/:/var/lib/postgresql/data/
+  api:
+    restart: always
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile.api
+    ports:
+      - "0.0.0.0:8007:8000"
+    volumes:
+      - ./../:/srv/wms_project/
+    environment:
+      WMS_MIGRATE_DB: 0
+      WMS_COLLECT_STATIC: 0
+      WMS_ENVIRONMENT: 'local'
+      WMS_PG_DB_NAME: 'wms'
+      WMS_PG_DB_USER: 'postgres'
+      WMS_PG_DB_PASSWORD: '123456'
+      WMS_PG_DB_HOST: postgres_db
+    depends_on:
+      - postgres_db
+  nginx:
+      image: nginx:1.25.5
+      restart: always
+      ports:
+        - "0.0.0.0:8008:80"
+      volumes:
+        - ./nginx-conf.d/:/etc/nginx/conf.d/
+        - ./../public/:/srv/wms_project/public/
+      depends_on:
+        - api

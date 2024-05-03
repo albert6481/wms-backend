@@ -1,0 +1,19 @@
+.mypy_cache
+env
+.DS_Store
+
+*.pyc
+public
+.last_built_image
+uwsgi.ini
+build/pgdata
+
+settings_local*.py
+wms_project/.env
+
+pytest.log
+test-result.xml
+test-result.html
+
+# IDE files
+.vscode

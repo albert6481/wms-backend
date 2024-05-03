@@ -1,0 +1,45 @@
+# Use an official Python runtime as a parent image
+FROM python:3.12 as base
+
+# Create a builder stage for installing dependencies
+FROM base as builder
+
+# Install packages
+RUN mkdir /install
+ADD ./requirements.txt /requirements.txt
+RUN python3 -m pip install --upgrade pip \
+    && pip3 install --prefix=/install uwsgi \
+    && pip3 install --prefix=/install -r /requirements.txt
+
+# Create a new stage for the final image
+FROM base
+
+# Copy dependencies from the builder stage
+COPY --from=builder /install /usr/local
+
+ARG APP_USER=wms
+ARG APP_NAME=wms_project
+
+# Create a non-root user and assign permissions
+RUN DEBIAN_FRONTEND=noninteractive \
+    useradd -ms /bin/bash ${APP_USER} \
+    && usermod -a -G www-data ${APP_USER}
+
+RUN DEBIAN_FRONTEND=noninteractive \
+mkdir -p /var/run/uwsgi/ \
+&& chown -Rf ${APP_USER}:${APP_USER} /var/run/uwsgi/
+
+ADD ./build/start-api.sh /start-api.sh
+RUN chmod a+x /start-api.sh
+
+# Assign permissions to application directory
+RUN DEBIAN_FRONTEND=noninteractive \
+    chown -Rf ${APP_USER}:${APP_USER} /srv/
+
+EXPOSE 8000
+
+# Set the user and working directory for the application
+USER ${APP_USER}
+WORKDIR /srv/${APP_NAME}/
+
+CMD ["/start-api.sh"]
